@@ -1,0 +1,161 @@
+grammar org.xtext.example.mydsl1.ThisDsl with org.eclipse.xtext.common.Terminals
+
+generate thisDsl "http://www.xtext.org/example/mydsl1/ThisDsl"
+
+Model:
+	//(importSection = XImportSection)?
+	element = Experiment
+	;
+	
+	
+Experiment :
+	'experiment' (expName = ID)
+	
+	'model' (modName = ID) 
+	
+	'objective' 'is' (objective = Objective) 
+	
+	'design' (expDesign = Design)
+	
+	'performance measure' 'is' (perfMeasure = PerformanceMeasure)
+	
+	(('evidences are' (tempProperty = Evidences))?)*
+;
+		Objective:
+				 	 ( name = ID) '{'
+				 	 'Objective' 'Type' objtype = ID
+				 	 ('Description ' description = STRING ';')?
+				 	 '}'
+				 ;  
+		Design :
+				 	
+					'{'
+					('designType' designType = DesignType)?
+					//(('Constraints' constraint = XExpression)?)*
+					( iteartion = Iteration)?
+					('Variables' variables = Variables)
+					'}'
+				;	
+		
+		enum DesignType:
+					FULLFACTORIAL | FRACTIONALFACTORIAL | OTHERS 
+				;	
+		 	
+		  
+		 Variables:
+		 	'{'
+		 	( independentVariables = IndependentVariables)
+			( controlVariables = ControlVariables)?
+			( dependentVariables = DependentVariables)
+		 	'}'
+		 ;
+
+		 
+		 IndependentVariables :
+			'independent' 'variables' '{' 
+			( variables +=  Factor)*
+			'}';
+			
+		Factor:
+			   (factorName = ID) ':' 'Type' (factorType = VariableType) 'with values' (factorValue = Values)
+				;
+				
+		ControlVariables:		
+			  'control' 'variables' '{' ((controlName = ID) ':' 'Type' (controlType = VariableType) 'with values' (controlValue = Values) )*
+			 ;
+			 
+	     DependentVariables:
+	     	'dependent' 'variables' '{'
+	     	( responseName = Response)*
+	     	;
+	     	
+	     Response:
+	     	(responseName = ID) ':' 'Type' (responseType = ResponseType) 
+	     	'}';
+	     		 		
+		
+			
+		enum VariableType :
+			QUALITATIVE | QUANTITATIVE  | CONTINOUS | DISCRETE  | BINARY | NONBINARY
+		;
+		
+		enum ResponseType :
+			SIMPLE | COMPOSITE
+		;
+		
+		Values :
+			'{'
+			
+			//( function = XExpression)?
+			( value = rangeValue)?
+			( fvalue = factorLevelValue)?
+			'}';
+		
+		terminal rangeValue	: INT ('.')? (INT)? ;
+		terminal factorLevelValue	: rangeValue (',' rangeValue)* ;
+			
+		Iteration:
+			':' 	
+			('NoOfIterations' iterations = INT)
+			//('valuesToObserve' outputs = XExpression)? 
+		;	
+		
+		PerformanceMeasure :
+			'{'
+				'Expected Result'  (' = ' 'average(') (er= rangeValue)(') +-')(std= rangeValue)
+			'}'
+			;		
+		
+		Evidences:
+			'{'
+				(query += SpecPattern)* 
+				//query = STRING ';'
+				'on model ' path = STRING 
+				'name solution as: ' promela = STRING 
+			'}'
+		;	
+		
+		SpecPattern:
+			Condition ((l2 += Links)?)* ((exp += Expression)?)* ((op1 += Temporal | op2 += Logical)?)* (l3 = Links)?
+		;	
+		
+		Condition:
+			condition = Event ('+'|'-'|'*'|'/'|'%'|' = '|' == '|'&&'|'||'|'<'|'<='|'>'|'>='|'!'|'!=')? (e=Event)? (exp1=Expression)? (v=rangeValue)?
+		;
+		
+		Event:
+			Dispersed | Simultaneous
+		;
+		
+		Simultaneous:
+			'[' 
+				sim1 = Re (log += Logical sim2 += Re)*
+			']'
+		;
+		
+		Dispersed:
+			(disp += Re)+
+		;
+		
+		Re:
+			ID ('(' (ID ID)? ')')?
+		;
+		
+		enum Expression:
+			true | false
+						;
+	
+		enum Links:
+			is | occurs | to
+					;
+		
+		enum Temporal:
+			precedes | between | eventually | always | before | after | until | never | leads | absent | exists
+		;
+		
+		enum Logical:
+			and | or | not
+		;
+		
+
+		
