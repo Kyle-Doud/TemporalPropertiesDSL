@@ -109,18 +109,21 @@ Experiment :
 		Evidences:
 			'{'
 				(query += SpecPattern)* 
-				//query = STRING ';'
 				'on model ' path = STRING 
 				'name solution as: ' promela = STRING 
 			'}'
 		;	
 		
 		SpecPattern:
-			Condition ((l2 += Links)?)* ((exp += Expression)?)* ((op1 += Temporal | op2 += Logical)?)* (l3 = Links)?
+			Sample ((l2 += Links)?)* ((exp += Expression)?)* ((op1 += Temporal | op2 += Logical)?)* (l3 = Links)?
 		;	
 		
+		Sample:
+			Condition | Event
+		;
+		
 		Condition:
-			condition = Event ('+'|'-'|'*'|'/'|'%'|' = '|' == '|'&&'|'||'|'<'|'<='|'>'|'>='|'!'|'!=')? (e=Event)? (exp1=Expression)? (v=rangeValue)?
+			condition = (Re | ID) ('+'|'-'|'*'|'/'|'%'|' = '|' == '|'&&'|'||'|'<'|'<='|'>'|'>='|'!'|'!=')? (exp1=Expression)? (v=rangeValue)? (cond1=Condition)?
 		;
 		
 		Event:
